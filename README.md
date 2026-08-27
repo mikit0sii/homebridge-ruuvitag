@@ -1,6 +1,6 @@
 # homebridge-ruuvitag
 
-> **⚠️ Homebridge 2.x compatible fork** — This branch (`homebridge-2`) fixes the `TypeError: Service.BatteryService is not a constructor` crash introduced in Homebridge 2.0. It is the recommended version to use.
+> **⚠️ Homebridge 2.x compatible fork** — This branch fixes the `TypeError: Service.BatteryService is not a constructor` crash introduced in Homebridge 2.0. It is the recommended version to use.
 
 With this [Homebridge](https://github.com/homebridge/homebridge) plugin you can use [RuuviTags](https://tag.ruuvi.com/) with [Apple HomeKit](https://www.apple.com/ios/home/).
 
@@ -11,7 +11,7 @@ With this [Homebridge](https://github.com/homebridge/homebridge) plugin you can 
 
 ## Installation
 
-### Recommended — install directly from this branch
+### Recommended — install directly from this repo
 
 ```bash
 sudo npm install -g git+https://github.com/mikit0sii/homebridge-ruuvitag.git
@@ -39,7 +39,9 @@ sudo npm i -g homebridge-ruuvitag
 
 ---
 
-## Find out Ruuvitag IDs
+## Find out your RuuviTag IDs
+
+Run the debug tool while your tags are broadcasting — it will print each tag's MAC-based ID:
 
 ```bash
 npx ruuvitag-debug
@@ -47,44 +49,46 @@ npx ruuvitag-debug
 
 ## Config
 
-Add your tags to your Homebridge `config.json` under `accessories`:
+Add your tags to your Homebridge `config.json` under `accessories`. Replace the placeholder values with your own bridge details and tag IDs:
 
 ```json
 {
   "bridge": {
-    "name": "Ruuvi",
-    "username": "CC:22:3D:E3:CE:30",
+    "name": "Homebridge",
+    "username": "XX:XX:XX:XX:XX:XX",
     "port": 51826,
-    "pin": "031-45-154"
+    "pin": "XXX-XX-XXX"
   },
   "accessories": [
     {
       "accessory": "Ruuvitag",
-      "name": "Bathroom",
-      "id": "ca67bf52ca12"
+      "name": "Living Room",
+      "id": "xxxxxxxxxxxx"
     },
     {
       "accessory": "Ruuvitag",
       "name": "Bedroom",
-      "id": "fa81b4c6a891"
+      "id": "xxxxxxxxxxxx"
     }
   ]
 }
 ```
+
+> 🔑 **Never commit your real `config.json`** — it contains your bridge PIN and MAC address. Use this template only as a reference.
 
 ### Socket option
 
 You can listen to RuuviTag update events from a [socket server](https://github.com/klaalo/ifData/tree/master/tagSocket) instead of Bluetooth:
 
 ```json
-"socket": "http://raspberrypi.local:8787"
+"socket": "http://your-server.local:8787"
 ```
 
 ---
 
 ## Updates
 
-- **5.3.0** *(this branch)*: Fixed Homebridge 2.x compatibility (`Service.BatteryService` constructor error)
+- **5.3.0** *(this version)*: Fixed Homebridge 2.x compatibility (`Service.BatteryService` constructor error)
 - 5.2.0: Added ruuvitag version 5 support (Homebridge 1.x only)
 - 2.3.0: Updated ruuvitag support
 - 1.8.0: Fixed flooding issue and added `frequency` parameter
