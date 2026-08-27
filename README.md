@@ -126,25 +126,25 @@ Add your tags to `/var/lib/homebridge/config.json` (Homebridge 2.x path) or `~/.
 {
   "bridge": {
     "name": "Homebridge",
-    "username": "CC:22:3D:E3:CE:30",
-    "port": 51826,
-    "pin": "031-45-154"
+    "username": "xxx",
+    "port": xxx,
+    "pin": "xxx"
   },
   "accessories": [
     {
       "accessory": "Ruuvitag",
       "name": "Living Room",
-      "id": "ca67bf52ca12"
+      "id": "xxx"
     },
     {
       "accessory": "Ruuvitag",
       "name": "Bedroom",
-      "id": "fa81b4c6a891"
+      "id": "xxx"
     },
     {
       "accessory": "Ruuvitag",
       "name": "Balcony",
-      "id": "ac67df12bb34"
+      "id": "xxx"
     }
   ]
 }
