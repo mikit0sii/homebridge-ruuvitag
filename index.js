@@ -13,6 +13,11 @@ const tags = {};
 module.exports = (homebridge) => {
   Service = homebridge.hap.Service;
   Characteristic = homebridge.hap.Characteristic;
+
+  // Homebridge 2.0+ moved BatteryService to Service.Battery, keep
+  // backwards compatibility with older HAP versions.
+  Service.BatteryService = Service.Battery || Service.BatteryService;
+
   homebridge.registerAccessory('homebridge-ruuvitag', 'Ruuvitag', Ruuvitag, true);
 };
 
@@ -26,7 +31,7 @@ class Ruuvitag {
 
     if (config.socket) {
       socket = io.connect(config.socket);
-      debug('socket set to:', config.socket)
+      debug('socket set to:', config.socket);
     } else {
       ruuvi.on('found', tag => {
         tags[tag.id] = tag;
@@ -85,17 +90,17 @@ class Ruuvitag {
       tag = tags[this.id];
       listenTo = (tag) => {
         socket.on('updated', (data) => {
-          if (data.tagId == tag.id) {
+          if (data.tagId === tag.id) {
             this.update(tag, data);
           }
         });
-      }
+      };
     } else {
       listenTo = (tag) => {
         tag.on('updated', (data) => {
           this.update(tag, data);
         });
-      }
+      };
     }
 
     if (tag) {
@@ -190,7 +195,7 @@ class Ruuvitag {
     if (config.lowHumidityTrigger) {
       const lowHumidityState = (humidity < this.lowHumidityTriggerValue) ? 1 : 0;
 
-      if (lowHumidityState !== this.lowHumidityService) {
+      if (lowHumidityState !== this.lowHumidityState) {
         this.lowHumidityState = lowHumidityState;
         this.lowHumidityTriggerService
           .getCharacteristic(Characteristic.ContactSensorState)
