@@ -1,7 +1,7 @@
 {
   "name": "homebridge-ruuvitag",
-  "version": "5.2.0",
-  "description": "Ruuvitag bridge for Homebridge",
+  "version": "5.3.0-beta.0",
+  "description": "Ruuvitag bridge for Homebridge (Homebridge 2.x compatible)",
   "main": "index.js",
   "dependencies": {
     "debug": "~4.4.1",
@@ -14,7 +14,8 @@
     "test": ""
   },
   "engines": {
-    "homebridge": ">=0.4.38"
+    "node": ">=20.0.0",
+    "homebridge": "^1.8.0 || ^2.0.0"
   },
   "author": "Juha Lindstedt",
   "keywords": [
@@ -25,15 +26,16 @@
     "homekit",
     "apple",
     "bluetooth",
-    "node.js"
+    "node.js",
+    "supports-hap"
   ],
   "license": "ISC",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/pakastin/homebridge-ruuvitag.git"
+    "url": "git+https://github.com/mikit0sii/homebridge-ruuvitag.git"
   },
   "bugs": {
-    "url": "https://github.com/pakastin/homebridge-ruuvitag/issues"
+    "url": "https://github.com/mikit0sii/homebridge-ruuvitag/issues"
   },
-  "homepage": "https://github.com/pakastin/homebridge-ruuvitag#readme"
+  "homepage": "https://github.com/mikit0sii/homebridge-ruuvitag#readme"
 }
