@@ -1,6 +1,8 @@
 # homebridge-ruuvitag
 
-With this [Homebridge](https://github.com/nfarina/homebridge) plugin you can use [RuuviTags](https://tag.ruuvi.com/) with [Apple HomeKit](https://www.apple.com/ios/home/).
+With this [Homebridge](https://github.com/homebridge/homebridge) plugin you can use [RuuviTags](https://tag.ruuvi.com/) with [Apple HomeKit](https://www.apple.com/ios/home/).
+
+> ⚠️ **Homebridge 2.x / Node 22 users** — the plugin loads but the native BLE dependency (`@abandonware/bluetooth-hci-socket`) ships a prebuilt binary compiled for an older Node ABI. Follow the [Fix for Homebridge 2.x / Node 22](#fix-for-homebridge-2x--node-22-raspberry-pi) section below before doing anything else.
 
 ## Updates
 - 5.0.0: Added ruuvitag version 5 support
@@ -14,57 +16,134 @@ With this [Homebridge](https://github.com/nfarina/homebridge) plugin you can use
 - 1.2.0: [You can now set up heat and cold triggers](https://github.com/pakastin/homebridge-ruuvitag/releases/tag/v1.2.0)
 - 1.1.0: [Show battery level + low battery warning](https://github.com/pakastin/homebridge-ruuvitag/releases/tag/v1.1.0)
 
-## Installation
-First, install [Node.js](https://nodejs.org/) [Avahi](https://www.avahi.org/) (Homebridge might need this), [Homebridge](https://github.com/nfarina/homebridge) and this plugin:
-```bash
-# install Avahi if needed
-sudo apt-get install libavahi-compat-libdnssd-dev
+---
 
-# install Node.js
-curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash - &&\
-sudo apt-get install -y nodejs
+## Fix for Homebridge 2.x / Node 22 (Raspberry Pi)
 
-# install homebridge + homebridge-ruuvitag
-sudo npm i -g homebridge
-sudo npm i -g homebridge-ruuvitag
+### Symptoms
+
+If you see either of these errors in your Homebridge logs, follow this fix:
+
+```
+TypeError: Service.BatteryService is not a constructor
+```
+```
+Error: The module '.../@abandonware/bluetooth-hci-socket/build/Release/bluetooth_hci_socket.node'
+was compiled against a different Node.js version using NODE_MODULE_VERSION 127.
+This version of Node.js requires NODE_MODULE_VERSION 137.
 ```
 
-## Find out Ruuvitag ID's
-You can find out Ruuvitag ID's by running [`ruuvitag-debug`](https://github.com/pakastin/ruuvitag-debug):
+### Root cause
+
+Homebridge 2.x requires Node.js ≥ 22.12.0 (enforced — you cannot downgrade). The plugin's BLE stack (`@abandonware/bluetooth-hci-socket`) ships a prebuilt binary compiled for an older Node ABI (127 = Node 18), and its `binding.gyp` is incompatible with `node-gyp` 10.x so it cannot be recompiled. The solution is to replace it with the maintained [`@stoprocent/bluetooth-hci-socket`](https://www.npmjs.com/package/@stoprocent/bluetooth-hci-socket) fork, which supports Node 22 and compiles cleanly.
+
+### Step 1 — Install system build dependencies
+
+```bash
+sudo apt-get install -y build-essential libbluetooth-dev libudev-dev
+```
+
+### Step 2 — Install and compile the replacement BLE binding
+
+```bash
+cd /var/lib/homebridge/node_modules/homebridge-ruuvitag
+
+# Install the Node 22-compatible BLE fork
+sudo npm install @stoprocent/bluetooth-hci-socket --build-from-source
+
+# Build it (in case npm reused a cached prebuilt)
+cd node_modules/@stoprocent/bluetooth-hci-socket
+sudo /var/lib/homebridge/node_modules/homebridge-ruuvitag/node_modules/.bin/node-gyp rebuild
+
+# Verify the binary was produced
+ls build/Release/bluetooth_hci_socket.node
+```
+
+You should see `build/Release/bluetooth_hci_socket.node` listed.
+
+### Step 3 — Replace the broken binary
+
+```bash
+sudo cp \
+  /var/lib/homebridge/node_modules/homebridge-ruuvitag/node_modules/@stoprocent/bluetooth-hci-socket/build/Release/bluetooth_hci_socket.node \
+  /var/lib/homebridge/node_modules/homebridge-ruuvitag/node_modules/@abandonware/bluetooth-hci-socket/build/Release/bluetooth_hci_socket.node
+```
+
+### Step 4 — Restart Homebridge
+
+```bash
+sudo hb-service restart
+```
+
+### Step 5 — Verify
+
+In Homebridge logs you should now see:
+
+```
+Loaded plugin: homebridge-ruuvitag@5.2.0
+Registering accessory 'homebridge-ruuvitag.Ruuvitag'
+```
+
+...with no errors, and your RuuviTag accessories initializing normally.
+
+> **Note:** After Homebridge re-registers the accessories for the first time, HomeKit will place all sensors in the Default Room. Simply open the **Apple Home** app, long-press each sensor → Settings → Room, and reassign them.
+
+---
+
+## Standard Installation
+
+First, install [Node.js](https://nodejs.org/), [Avahi](https://www.avahi.org/), and [Homebridge](https://homebridge.io/):
+
+```bash
+# Install Avahi if needed
+sudo apt-get install libavahi-compat-libdnssd-dev
+
+# Install Homebridge (official method)
+curl -sSfL https://repo.homebridge.io/KEY.gpg | sudo gpg --dearmor | sudo tee /usr/share/keyrings/homebridge.gpg > /dev/null
+echo "deb [signed-by=/usr/share/keyrings/homebridge.gpg] https://repo.homebridge.io stable main" | sudo tee /etc/apt/sources.list.d/homebridge.list > /dev/null
+sudo apt-get update
+sudo apt-get install homebridge
+
+# Install this plugin
+sudo npm install -g homebridge-ruuvitag
+```
+
+> After installing the plugin on Homebridge 2.x, follow the [Fix for Homebridge 2.x / Node 22](#fix-for-homebridge-2x--node-22-raspberry-pi) section above.
+
+## Find out RuuviTag IDs
+
+You can find your RuuviTag IDs by running [`ruuvitag-debug`](https://github.com/pakastin/ruuvitag-debug):
+
 ```bash
 npx ruuvitag-debug
 ```
 
 ## Config
 
-Create a [`~/.homebridge/config.json`](https://github.com/nfarina/homebridge/blob/master/config-sample.json) file
-(change ID's and add/remove tags as necessary):
+Add your tags to `/var/lib/homebridge/config.json` (Homebridge 2.x path) or `~/.homebridge/config.json`:
 
 ```json
 {
   "bridge": {
-    "name": "Ruuvi",
+    "name": "Homebridge",
     "username": "CC:22:3D:E3:CE:30",
     "port": 51826,
     "pin": "031-45-154"
   },
-
-  "description": "RuuviTag bridge",
-
   "accessories": [
     {
       "accessory": "Ruuvitag",
-      "name": "Ruuvi 1",
+      "name": "Living Room",
       "id": "ca67bf52ca12"
     },
     {
       "accessory": "Ruuvitag",
-      "name": "Ruuvi 2",
+      "name": "Bedroom",
       "id": "fa81b4c6a891"
     },
     {
       "accessory": "Ruuvitag",
-      "name": "Ruuvi 3",
+      "name": "Balcony",
       "id": "ac67df12bb34"
     }
   ]
@@ -73,39 +152,19 @@ Create a [`~/.homebridge/config.json`](https://github.com/nfarina/homebridge/blo
 
 ### Socket option
 
-You can listen to RuuviTag update events emitted from a [socket server](https://github.com/klaalo/ifData/tree/master/tagSocket) instead of using Bluetooth. This is signalled by adding a configuration parameter for the accessory.
+You can listen to RuuviTag update events emitted from a [socket server](https://github.com/klaalo/ifData/tree/master/tagSocket) instead of using Bluetooth:
 
 ```json
 "socket": "http://raspberrypi.local:8787"
 ```
 
-## Run
-
-Now you can run Homebridge:
-```bash
-homebridge
-```
-
-## Start on startup
-
-Install pm2:
-```bash
-npm -g i pm2
-```
-
-Start with pm2 and save as daemon:
-```
-pm2 start homebridge
-pm2 save
-pm2 startup
-```
 ## Supported features
-- temperature
-- humidity
-- battery level
-- battery level alert
-- heat alert
-- cold alert
-- high humidity alert
-- low humidity alert
-- motion alert
+- Temperature
+- Humidity
+- Battery level
+- Battery level alert
+- Heat alert
+- Cold alert
+- High humidity alert
+- Low humidity alert
+- Motion alert
