@@ -35,10 +35,10 @@ Create a [`~/.homebridge/config.json`](https://github.com/nfarina/homebridge/blo
 ```json
 {
   "bridge": {
-    "name": "Ruuvi",
-    "username": "CC:22:3D:E3:CE:30",
+    "name": "Homebridge",
+    "username": "XX:XX:XX:XX:XX:XX",
     "port": 51826,
-    "pin": "031-45-154"
+    "pin": "XXX-XX-XXX"
   },
 
   "description": "RuuviTag bridge",
@@ -46,22 +46,24 @@ Create a [`~/.homebridge/config.json`](https://github.com/nfarina/homebridge/blo
   "accessories": [
     {
       "accessory": "Ruuvitag",
-      "name": "Ruuvi 1",
-      "id": "ca67bf52ca12"
+      "name": "Living Room",
+      "id": "xxxxxxxxxxxx"
     },
     {
       "accessory": "Ruuvitag",
-      "name": "Ruuvi 2",
-      "id": "fa81b4c6a891"
+      "name": "Bedroom",
+      "id": "xxxxxxxxxxxx"
     },
     {
       "accessory": "Ruuvitag",
-      "name": "Ruuvi 3",
-      "id": "ac67df12bb34"
+      "name": "Balcony",
+      "id": "xxxxxxxxxxxx"
     }
   ]
 }
 ```
+
+> 🔑 **Never commit your real `config.json`** — it contains your bridge PIN and MAC address.
 
 ## Run
 
@@ -83,5 +85,6 @@ pm2 start homebridge
 pm2 save
 pm2 startup
 ```
+
 ## Supported features
 For now the bridge only supports temperature, humidity, battery level and warning for low battery.
